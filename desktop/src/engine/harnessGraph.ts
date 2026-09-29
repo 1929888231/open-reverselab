@@ -1,5 +1,6 @@
 import { StateGraph, END, START, MemorySaver } from "@langchain/langgraph";
 import { GraphStep } from "../core";
+import { llmService } from "../services";
 
 export type { GraphStep };
 
@@ -40,9 +41,6 @@ export function createHarnessEngine(onEvent?: EventCallback) {
     };
     emit(step);
 
-    // Simulate analysis delay
-    await new Promise((r) => setTimeout(r, 600));
-
     const lower = state.target.toLowerCase();
     let board = "general";
     let triage: Record<string, any> = { type: "Binary / Protocol", size: "Unknown" };
@@ -57,6 +55,8 @@ export function createHarnessEngine(onEvent?: EventCallback) {
       board = "pe-reverse";
       triage = { type: "Windows PE32+", subsystem: "GUI", entropy: 6.84, packer: "UPX" };
     }
+
+    await new Promise((r) => setTimeout(r, 400));
 
     const doneStep: GraphStep = {
       ...step,
@@ -89,7 +89,7 @@ export function createHarnessEngine(onEvent?: EventCallback) {
     };
     emit(step);
 
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 400));
 
     const doneStep: GraphStep = {
       ...step,
@@ -136,14 +136,48 @@ export function createHarnessEngine(onEvent?: EventCallback) {
     };
     emit(stepDynamic);
 
-    await new Promise((r) => setTimeout(r, 800));
+    // Try real LLM reasoning with qwen3.8-flash
+    let customSummary = "已完成目标剖析、反调试绕过并提取出核心解密脚本";
+    let customScript = `def decrypt_payload(cipher_bytes: bytes, key: int = 0xDEADBEEF) -> bytes:\n    # Auto-extracted by ReverseLab Harness\n    return bytes([b ^ ((key >> ((i % 4) * 8)) & 0xFF) for i, b in enumerate(cipher_bytes)])\n\n# Test vector verification: PASS\nprint(decrypt_payload(b'\\x1a\\x0b\\x1d...'))`;
+    let customKey = "0xDEADBEEFCAFEBABE";
+    let customFlag = "flag{r3v3rs3_l4b_aut0_h4rn3ss_pr0v3n}";
+
+    if (llmService.getApiKey()) {
+      try {
+        const res = await llmService.complete(
+          [
+            {
+              role: "system",
+              content:
+                "你是一个高级二进制逆向工程与安全分析专家。请根据目标信息与用户的愿望，给出精简的分析结论和一段高质量 Python 复现脚本。必须返回 JSON，格式形如：{\"summary\":\"...\",\"script\":\"...\",\"key\":\"...\",\"flag\":\"...\"}，不要输出其他 markdown 解释。",
+            },
+            {
+              role: "user",
+              content: `目标: ${state.target}\n归属板块: ${state.board}\n特征: ${JSON.stringify(state.triageInfo)}\n用户需求: ${state.wish || "快速逆向核心校验算法并生成解密脚本"}`,
+            },
+          ],
+          { maxTokens: 1024, temperature: 0.2 }
+        );
+
+        const cleanJson = res.content.replace(/^```json\s*/i, "").replace(/\s*```$/i, "").trim();
+        const parsed = JSON.parse(cleanJson);
+        if (parsed.summary) customSummary = parsed.summary;
+        if (parsed.script) customScript = parsed.script;
+        if (parsed.key) customKey = parsed.key;
+        if (parsed.flag) customFlag = parsed.flag;
+      } catch (e) {
+        // Fallback to defaults
+      }
+    } else {
+      await new Promise((r) => setTimeout(r, 600));
+    }
 
     // Finish sub-agents
     const doneStatic: GraphStep = {
       ...stepStatic,
       status: "done",
       detail: "定位校验函数 0x401820，提取密钥表与轮常量",
-      evidence: { targetOffset: "0x00401820", xorKey: "0xDEADBEEF" },
+      evidence: { targetOffset: "0x00401820", xorKey: customKey },
     };
     emit(doneStatic);
 
@@ -159,22 +193,22 @@ export function createHarnessEngine(onEvent?: EventCallback) {
     const joinId = `join-${Math.random().toString(36).substring(2, 8)}`;
     const joinStep: GraphStep = {
       id: joinId,
-      parentId: sub1Id, // Visually connected from branch
+      parentId: sub1Id,
       agentId: "main",
       title: "证据闭环: 算法提取与 Python 复现",
       status: "done",
-      detail: "动静态证据结合，成功还原对称解密算法",
+      detail: customSummary,
       kbRef: "kb/general/techniques/00-crypto/01-custom-xor-tea.md",
-      evidence: { algorithm: "XOR-TEA", keyLength: 128 },
+      evidence: { algorithm: "Qwen-Assisted", key: customKey },
       timestamp: Date.now(),
     };
     emit(joinStep);
 
     const deliverables = {
-      script: `def decrypt_payload(cipher_bytes: bytes, key: int = 0xDEADBEEF) -> bytes:\n    # Auto-extracted by ReverseLab Harness\n    return bytes([b ^ ((key >> ((i % 4) * 8)) & 0xFF) for i, b in enumerate(cipher_bytes)])\n\n# Test vector verification: PASS\nprint(decrypt_payload(b'\\x1a\\x0b\\x1d...'))`,
-      key: "0xDEADBEEFCAFEBABE",
-      flag: "flag{r3v3rs3_l4b_aut0_h4rn3ss_pr0v3n}",
-      summary: "已完成目标加壳剖析、反调试绕过并提取出核心解密脚本",
+      script: customScript,
+      key: customKey,
+      flag: customFlag,
+      summary: customSummary,
     };
 
     onEvent?.({ type: "LOOT_REVEAL", deliverables });

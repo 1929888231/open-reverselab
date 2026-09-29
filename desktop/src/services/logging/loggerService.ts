@@ -42,6 +42,10 @@ class LoggerService {
     return this.log("info", agentId, message, { payload });
   }
 
+  public warn(agentId: string, message: string, payload?: any) {
+    return this.log("warn", agentId, message, { payload });
+  }
+
   public tool(agentId: string, command: string, durationMs?: number, payload?: any) {
     return this.log("tool", agentId, `Execute: ${command}`, { command, durationMs, payload });
   }

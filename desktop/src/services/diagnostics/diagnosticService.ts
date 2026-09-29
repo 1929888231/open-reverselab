@@ -1,8 +1,16 @@
 import { DiagnosticItem } from "../../core";
 import { logger } from "../logging/loggerService";
+import { llmService } from "../llm/llmService";
 
 class DiagnosticService {
   private items: DiagnosticItem[] = [
+    {
+      id: "diag-llm",
+      category: "system",
+      name: "TokenRhythm LLM 网关 (qwen3.8-flash)",
+      status: "checking",
+      detail: "检测 TokenRhythm API 网关连通性...",
+    },
     {
       id: "diag-py",
       category: "toolchain",
@@ -72,7 +80,20 @@ class DiagnosticService {
     logger.info("diag", "Starting full environment and toolchain probe...");
     const start = Date.now();
 
-    await new Promise((r) => setTimeout(r, 600));
+    // Probe LLM gateway in background
+    const llmHealth = await llmService.checkHealth();
+    const llmItem = this.items.find((i) => i.id === "diag-llm");
+    if (llmItem) {
+      if (llmHealth.ok) {
+        llmItem.status = "pass";
+        llmItem.detail = `API 连通正常 (${llmService.getModel()}) · 往返延迟: ${llmHealth.latencyMs}ms`;
+        logger.info("diag", `LLM gateway online: ${llmItem.detail}`);
+      } else {
+        llmItem.status = "warn";
+        llmItem.detail = `网关异常: ${llmHealth.error || "未配置 API Key"}`;
+        logger.warn("diag", `LLM gateway warning: ${llmItem.detail}`);
+      }
+    }
 
     if (target) {
       const sampleItem = this.items.find((i) => i.category === "sample");
