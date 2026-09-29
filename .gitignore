@@ -94,6 +94,7 @@ tools/ctf-website/_downloads/
 .reasonix/
 .claude/settings.local.json
 .serena/
+.workbuddy/
 
 # Machine-level env snapshot (AI-generated per AGENTS.md protocol; lives in user home, never commit)
 .open-reverselab/

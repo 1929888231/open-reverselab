@@ -8,10 +8,10 @@ head:
       content: en_US
   - - meta
     - property: og:title
-      content: Open-ReverseLab — AI Reverse Engineering Agent & MCP Lab
+      content: "Open-ReverseLab — AI Reverse Engineering Agent & MCP Lab"
   - - meta
     - property: og:description
-      content: Open-source AI reverse-engineering agent & MCP lab: 183 executable knowledge-base articles + 100+ MCP automation tools covering CTF, APK, PE, crypto and game-cheating reversing.
+      content: "Open-source AI reverse-engineering agent & MCP lab: 183 executable knowledge-base articles + 100+ MCP automation tools covering CTF, APK, PE, crypto and game-cheating reversing."
 ---
 
 <HomePage />

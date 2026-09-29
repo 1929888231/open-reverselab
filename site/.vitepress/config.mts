@@ -133,6 +133,7 @@ const languageDetectScript = `(function () {
 })();`
 
 export default defineConfig({
+  base: process.env.VITEPRESS_BASE || '/',
   lang: 'zh-CN',
   title: 'ReverseLab',
   description: '开源逆向工程实验环境：183 篇可执行知识库 + 100+ MCP 自动化工具。Agent 原生，目录即约定。',
@@ -183,6 +184,13 @@ export default defineConfig({
 
   markdown: {
     lineNumbers: false,
+    languageAlias: {
+      smali: 'java',
+      yara: 'c',
+      freemarker: 'html',
+      smarty: 'html',
+      pebble: 'html',
+    },
     config(md) {
       // kb/ 文章含大量 Jinja2/Twig/Velocity 示例（{{ ... }}），与 Vue 插值冲突。
       // 在 markdown-it 渲染完成后，把整段 HTML 中的裸 {{ / }} 转义为 HTML 实体：
