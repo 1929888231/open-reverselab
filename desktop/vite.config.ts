@@ -25,6 +25,14 @@ export default defineConfig(() => ({
           port: 1421,
         }
       : undefined,
+    proxy: {
+      "/api/llm": {
+        target: "https://tokenrhythm.studio",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/llm/, ""),
+      },
+    },
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],

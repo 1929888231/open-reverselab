@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Sparkles, Terminal, ArrowUp, Square, Paperclip, UploadCloud } from "lucide-react";
-import { HarnessMode } from "../../core";
+import { HarnessMode, useI18n } from "../../core";
 import { logger } from "../../services";
 
 interface PromptConsoleProps {
@@ -16,6 +16,7 @@ export function PromptConsole({
   onStop,
   defaultTarget = "samples/challenge_auth.exe",
 }: PromptConsoleProps) {
+  const { t } = useI18n();
   const [mode, setMode] = useState<HarnessMode>("wish");
   const [target, setTarget] = useState(defaultTarget);
   const [prompt, setPrompt] = useState("");
@@ -54,29 +55,29 @@ export function PromptConsole({
       const uint8 = new Uint8Array(buffer.slice(0, 4));
       let fileType = "Unknown Binary";
       if (uint8[0] === 0x4d && uint8[1] === 0x5a) {
-        fileType = "Windows PE Binary";
+        fileType = "PE";
       } else if (uint8[0] === 0x50 && uint8[1] === 0x4b) {
-        fileType = "APK / ZIP Package";
+        fileType = "APK/ZIP";
       } else if (uint8[0] === 0x7f && uint8[1] === 0x45 && uint8[2] === 0x4c && uint8[3] === 0x46) {
-        fileType = "Linux ELF Binary";
+        fileType = "ELF";
       }
 
       setTarget(file.name);
       logger.info(
         "triage",
-        `已导入目标样本: ${file.name} (${(file.size / 1024).toFixed(1)} KB) · 识别格式: ${fileType}`,
+        `Sample: ${file.name} (${(file.size / 1024).toFixed(1)} KB) · ${fileType}`,
         { sha256, sizeBytes: file.size, fileType }
       );
     } catch (err: any) {
-      logger.error("triage", `文件读取异常: ${err.message}`);
+      logger.error("triage", `Read error: ${err.message}`);
     }
   };
 
   const quickChips = [
-    { label: "UPX 脱壳与解密", prompt: "脱壳并还原密钥校验算法，生成解密注册机脚本" },
-    { label: "反调试与分支绕过", prompt: "静态扫描并绕过 IsDebuggerPresent 反调试分支，提取载荷" },
-    { label: "Native JNI 密钥还原", prompt: "定位 libsecurity.so 导出函数与常量并输出复现代码" },
-    { label: "JWT 密钥爆破与利用", prompt: "检索 JWT None 签名漏洞及弱口令爆破并给出自动化利用脚本" },
+    { label: t.prompt.chipUpx, prompt: "Unpack and recover verification algorithm with python script" },
+    { label: t.prompt.chipAntiDebug, prompt: "Bypass IsDebuggerPresent anti-debug branch and dump payload" },
+    { label: t.prompt.chipNative, prompt: "Locate libsecurity.so exported symbols and recover encryption key" },
+    { label: t.prompt.chipJwt, prompt: "Audit JWT auth token vulnerabilities and generate exploit" },
   ];
 
   return (
@@ -102,7 +103,7 @@ export function PromptConsole({
               }`}
             >
               <Sparkles className="w-3 h-3 text-zinc-300" />
-              <span>许愿闭环 (Wish)</span>
+              <span>{t.prompt.wish}</span>
             </button>
             <button
               type="button"
@@ -114,7 +115,7 @@ export function PromptConsole({
               }`}
             >
               <Terminal className="w-3 h-3 text-zinc-300" />
-              <span>交互诊断 (Interactive)</span>
+              <span>{t.prompt.interactive}</span>
             </button>
           </div>
 
@@ -134,18 +135,16 @@ export function PromptConsole({
                 <button
                   type="button"
                   onClick={() => setIsEditingTarget(true)}
-                  title="点击手动编辑目标路径或URL"
                   className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/80 text-[11px] font-mono text-zinc-300 transition cursor-pointer"
                 >
                   <Paperclip className="w-3 h-3 text-zinc-500" />
-                  <span className="text-zinc-500">Target:</span>
+                  <span className="text-zinc-500">{t.common.target}:</span>
                   <span className="truncate max-w-[200px]">{target}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  title="导入本地二进制样本 (.exe, .apk, .so, .bin)"
                   className="p-1 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/80 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
                 >
                   <UploadCloud className="w-3.5 h-3.5" />
@@ -164,9 +163,7 @@ export function PromptConsole({
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={
-              mode === "wish"
-                ? "输入逆向目标愿望 (例如: 自动脱壳分析、定位密钥校验算法并还原出注册机 Python 脚本)..."
-                : "输入逆向研判指令 (例如: 检索导入表、反汇编入口函数、配置断点)..."
+              mode === "wish" ? t.prompt.wishPlaceholder : t.prompt.interactivePlaceholder
             }
             className="w-full bg-transparent px-2 py-1 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none resize-none font-sans leading-relaxed"
           />
@@ -198,7 +195,7 @@ export function PromptConsole({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-800/60 text-rose-200 text-xs font-mono transition cursor-pointer"
               >
                 <Square className="w-3 h-3 fill-rose-200" />
-                <span>Stop</span>
+                <span>{t.common.stop}</span>
               </button>
             ) : (
               <button
@@ -207,7 +204,7 @@ export function PromptConsole({
                 disabled={!prompt.trim()}
                 className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium transition disabled:opacity-30 cursor-pointer"
               >
-                <span>Run</span>
+                <span>{t.common.run}</span>
                 <ArrowUp className="w-3.5 h-3.5" />
               </button>
             )}

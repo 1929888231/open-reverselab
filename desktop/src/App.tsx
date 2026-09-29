@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { HarnessProvider, useHarness } from "./state";
+import { I18nProvider } from "./core";
 import {
   TitleBar,
   Sidebar,
@@ -127,8 +128,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <HarnessProvider>
-      <AppContent />
-    </HarnessProvider>
+    <I18nProvider>
+      <HarnessProvider>
+        <AppContent />
+      </HarnessProvider>
+    </I18nProvider>
   );
 }

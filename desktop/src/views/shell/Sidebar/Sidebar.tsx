@@ -1,5 +1,5 @@
 import { Plus, Terminal, Network, Shield, FolderGit2, Activity, BookOpen, Settings } from "lucide-react";
-import { HarnessView, SessionItem } from "../../../core";
+import { HarnessView, SessionItem, useI18n } from "../../../core";
 
 interface SidebarProps {
   sessions: SessionItem[];
@@ -22,8 +22,10 @@ export function Sidebar({
   activeView,
   onToggleView,
 }: SidebarProps) {
+  const { t } = useI18n();
+
   return (
-    <aside className="w-64 h-full bg-[#0d0d10] border-r border-zinc-900 flex flex-col select-none shrink-0 z-10 font-sans">
+    <aside className="w-60 h-full bg-[#0d0d10] border-r border-zinc-900 flex flex-col select-none shrink-0 z-10 font-sans">
       {/* New Analysis Button */}
       <div className="p-3 border-b border-zinc-900/80">
         <button
@@ -31,19 +33,19 @@ export function Sidebar({
           className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium text-zinc-200 transition cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5 text-zinc-400" />
-          <span>New Analysis</span>
+          <span>{t.sidebar.newAnalysis}</span>
         </button>
       </div>
 
       {/* View Switcher Tabs (4 columns: Graph, Logs, Diag, KB) */}
       <div className="px-3 pt-3">
         <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1.5 px-1">
-          Views
+          {t.sidebar.views}
         </div>
         <div className="grid grid-cols-4 gap-1 p-1 bg-zinc-950/60 rounded-lg border border-zinc-900">
           <button
             onClick={() => onToggleView("canvas")}
-            title="Graph Canvas"
+            title={t.sidebar.graph}
             className={`flex items-center justify-center gap-1 py-1.5 rounded text-[11px] font-mono transition cursor-pointer ${
               activeView === "canvas"
                 ? "bg-zinc-800 text-zinc-100 shadow-sm"
@@ -51,11 +53,11 @@ export function Sidebar({
             }`}
           >
             <Network className="w-3 h-3" />
-            <span>Graph</span>
+            <span>{t.sidebar.graph}</span>
           </button>
           <button
             onClick={() => onToggleView("console")}
-            title="Execution Logs"
+            title={t.sidebar.logs}
             className={`flex items-center justify-center gap-1 py-1.5 rounded text-[11px] font-mono transition cursor-pointer ${
               activeView === "console"
                 ? "bg-zinc-800 text-zinc-100 shadow-sm"
@@ -63,11 +65,11 @@ export function Sidebar({
             }`}
           >
             <Terminal className="w-3 h-3" />
-            <span>Logs</span>
+            <span>{t.sidebar.logs}</span>
           </button>
           <button
             onClick={() => onToggleView("diagnostics")}
-            title="Diagnostics Center"
+            title={t.sidebar.diag}
             className={`flex items-center justify-center gap-1 py-1.5 rounded text-[11px] font-mono transition cursor-pointer ${
               activeView === "diagnostics"
                 ? "bg-zinc-800 text-zinc-100 shadow-sm"
@@ -75,11 +77,11 @@ export function Sidebar({
             }`}
           >
             <Activity className="w-3 h-3" />
-            <span>Diag</span>
+            <span>{t.sidebar.diag}</span>
           </button>
           <button
             onClick={() => onToggleView("kb")}
-            title="Knowledge Base Explorer"
+            title={t.sidebar.kb}
             className={`flex items-center justify-center gap-1 py-1.5 rounded text-[11px] font-mono transition cursor-pointer ${
               activeView === "kb"
                 ? "bg-zinc-800 text-zinc-100 shadow-sm"
@@ -87,7 +89,7 @@ export function Sidebar({
             }`}
           >
             <BookOpen className="w-3 h-3" />
-            <span>KB</span>
+            <span>{t.sidebar.kb}</span>
           </button>
         </div>
       </div>
@@ -95,7 +97,7 @@ export function Sidebar({
       {/* History Session List */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
         <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1.5 px-1">
-          History
+          {t.sidebar.history}
         </div>
         {sessions.map((s) => {
           const isActive = s.id === activeSessionId;
@@ -111,7 +113,7 @@ export function Sidebar({
             >
               <div className="text-xs font-medium truncate">{s.title}</div>
               <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500">
-                <span className="truncate max-w-[130px]">{s.target}</span>
+                <span className="truncate max-w-[120px]">{s.target}</span>
                 <span>{s.time}</span>
               </div>
             </div>
@@ -128,16 +130,16 @@ export function Sidebar({
           >
             <div className="flex items-center gap-2">
               <Shield className="w-3.5 h-3.5 text-zinc-400" />
-              <span>Environment</span>
+              <span>{t.sidebar.environment}</span>
             </div>
             <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
-              109 Tools
+              109 {t.sidebar.toolsUnit}
             </span>
           </button>
 
           <button
             onClick={onOpenSettings}
-            title="Harness Settings"
+            title={t.settings.title}
             className="p-2 rounded-lg hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
           >
             <Settings className="w-3.5 h-3.5" />

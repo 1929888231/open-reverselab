@@ -26,7 +26,10 @@ export class LlmService {
       localStorage.getItem("reverselab_api_key") ||
       (import.meta.env.VITE_LLM_API_KEY as string) ||
       "";
-    this.defaultModel = (import.meta.env.VITE_LLM_MODEL as string) || "qwen3.8-flash";
+    this.defaultModel =
+      localStorage.getItem("reverselab_model") ||
+      (import.meta.env.VITE_LLM_MODEL as string) ||
+      "qwen3.8-flash";
   }
 
   public getApiKey(): string {
@@ -47,10 +50,31 @@ export class LlmService {
     localStorage.setItem("reverselab_model", model);
   }
 
+  public getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  public setBaseUrl(url: string): void {
+    this.baseUrl = url;
+    localStorage.setItem("reverselab_base_url", url);
+  }
+
+  private resolveUrl(path: string): string {
+    // In dev mode, route through Vite proxy to bypass browser CORS preflight
+    if (
+      import.meta.env.DEV &&
+      (this.baseUrl.includes("tokenrhythm.studio") || this.baseUrl.startsWith("/api/llm"))
+    ) {
+      return `/api/llm/v1${path}`;
+    }
+    return `${this.baseUrl}${path}`;
+  }
+
   public async checkHealth(): Promise<{ ok: boolean; latencyMs: number; error?: string }> {
     const start = performance.now();
     try {
-      const res = await fetch(`${this.baseUrl}/chat/completions`, {
+      const url = this.resolveUrl("/chat/completions");
+      const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +94,11 @@ export class LlmService {
       }
       return { ok: true, latencyMs };
     } catch (err: any) {
-      return { ok: false, latencyMs: Math.round(performance.now() - start), error: err.message || String(err) };
+      return {
+        ok: false,
+        latencyMs: Math.round(performance.now() - start),
+        error: err.message || String(err),
+      };
     }
   }
 
@@ -84,8 +112,9 @@ export class LlmService {
   ): Promise<CompletionResult> {
     const start = performance.now();
     const model = options?.model || this.defaultModel;
+    const url = this.resolveUrl("/chat/completions");
 
-    const res = await fetch(`${this.baseUrl}/chat/completions`, {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

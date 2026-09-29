@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Copy, Check, X, Download } from "lucide-react";
-import { Deliverables } from "../../core";
+import { Deliverables, useI18n } from "../../core";
 
 interface LootCardProps {
   deliverables: Deliverables;
@@ -8,6 +8,7 @@ interface LootCardProps {
 }
 
 export function LootCard({ deliverables, onClose }: LootCardProps) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -35,11 +36,9 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
       <div className="w-full max-w-xl bg-[#121215] border border-zinc-800 rounded-2xl p-6 shadow-2xl flex flex-col space-y-4">
         <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
           <div>
-            <h2 className="text-sm font-medium text-zinc-100">
-              Analysis Deliverables
-            </h2>
+            <h2 className="text-sm font-medium text-zinc-100">{t.loot.title}</h2>
             <p className="text-xs font-mono text-zinc-500 mt-0.5">
-              {deliverables.summary || "Complete"}
+              {deliverables.summary || t.common.ready}
             </p>
           </div>
           <button
@@ -54,7 +53,7 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
           {deliverables.key && (
             <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800/80">
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-1">
-                Extracted Key
+                {t.loot.key}
               </div>
               <div className="text-xs font-mono text-zinc-200 font-bold break-all">
                 {deliverables.key}
@@ -65,7 +64,7 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
           {deliverables.flag && (
             <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800/80">
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-1">
-                Flag
+                {t.loot.flag}
               </div>
               <div className="text-xs font-mono text-emerald-400 font-bold break-all">
                 {deliverables.flag}
@@ -78,16 +77,15 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
-                Reproduce Script
+                {t.loot.script}
               </span>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={handleDownload}
-                  title="下载 Python 脚本至本地"
                   className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono transition cursor-pointer"
                 >
                   <Download className="w-3 h-3" />
-                  <span>Save .py</span>
+                  <span>{t.loot.saveScript}</span>
                 </button>
                 <button
                   onClick={handleCopy}
@@ -96,12 +94,12 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
                   {copied ? (
                     <>
                       <Check className="w-3 h-3 text-emerald-400" />
-                      <span>Copied</span>
+                      <span>{t.common.copied}</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3 h-3" />
-                      <span>Copy</span>
+                      <span>{t.common.copy}</span>
                     </>
                   )}
                 </button>
@@ -118,7 +116,7 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-medium transition cursor-pointer"
           >
-            Dismiss
+            {t.common.dismiss}
           </button>
         </div>
       </div>
