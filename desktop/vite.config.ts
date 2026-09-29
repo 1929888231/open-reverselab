@@ -31,6 +31,13 @@ export default defineConfig(() => ({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api\/llm/, ""),
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            // Strip origin and referer headers to prevent TokenRhythm CSRF_INVALID rejection
+            proxyReq.removeHeader("origin");
+            proxyReq.removeHeader("referer");
+          });
+        },
       },
     },
     watch: {

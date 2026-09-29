@@ -24,79 +24,59 @@ export function Sidebar({
 }: SidebarProps) {
   const { t } = useI18n();
 
+  const navItems: { id: HarnessView; label: string; icon: any }[] = [
+    { id: "canvas", label: t.sidebar.graph, icon: Network },
+    { id: "console", label: t.sidebar.logs, icon: Terminal },
+    { id: "diagnostics", label: t.sidebar.diag, icon: Activity },
+    { id: "kb", label: t.sidebar.kb, icon: BookOpen },
+  ];
+
   return (
-    <aside className="w-60 h-full bg-[#0d0d10] border-r border-zinc-900 flex flex-col select-none shrink-0 z-10 font-sans">
+    <aside className="w-56 h-full bg-[#0d0d10] border-r border-zinc-900 flex flex-col select-none shrink-0 z-10 font-sans">
       {/* New Analysis Button */}
       <div className="p-3 border-b border-zinc-900/80">
         <button
           onClick={onNewSession}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium text-zinc-200 transition cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800/80 text-xs font-medium text-zinc-200 transition cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5 text-zinc-400" />
           <span>{t.sidebar.newAnalysis}</span>
         </button>
       </div>
 
-      {/* View Switcher Tabs (4 columns: Graph, Logs, Diag, KB) */}
-      <div className="px-3 pt-3">
-        <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1.5 px-1">
+      {/* Vertical Navigation Items (Clean & Spacious, No Squished Text) */}
+      <div className="px-2 pt-3 pb-2 border-b border-zinc-900/60">
+        <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1.5 px-2">
           {t.sidebar.views}
         </div>
-        <div className="grid grid-cols-4 gap-1 p-1 bg-zinc-950/60 rounded-lg border border-zinc-900">
-          <button
-            onClick={() => onToggleView("canvas")}
-            title={t.sidebar.graph}
-            className={`flex items-center justify-center gap-1 py-1.5 rounded text-[11px] font-mono transition cursor-pointer ${
-              activeView === "canvas"
-                ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <Network className="w-3 h-3" />
-            <span>{t.sidebar.graph}</span>
-          </button>
-          <button
-            onClick={() => onToggleView("console")}
-            title={t.sidebar.logs}
-            className={`flex items-center justify-center gap-1 py-1.5 rounded text-[11px] font-mono transition cursor-pointer ${
-              activeView === "console"
-                ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <Terminal className="w-3 h-3" />
-            <span>{t.sidebar.logs}</span>
-          </button>
-          <button
-            onClick={() => onToggleView("diagnostics")}
-            title={t.sidebar.diag}
-            className={`flex items-center justify-center gap-1 py-1.5 rounded text-[11px] font-mono transition cursor-pointer ${
-              activeView === "diagnostics"
-                ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <Activity className="w-3 h-3" />
-            <span>{t.sidebar.diag}</span>
-          </button>
-          <button
-            onClick={() => onToggleView("kb")}
-            title={t.sidebar.kb}
-            className={`flex items-center justify-center gap-1 py-1.5 rounded text-[11px] font-mono transition cursor-pointer ${
-              activeView === "kb"
-                ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-300"
-            }`}
-          >
-            <BookOpen className="w-3 h-3" />
-            <span>{t.sidebar.kb}</span>
-          </button>
-        </div>
+        <nav className="space-y-0.5">
+          {navItems.map((item) => {
+            const isActive = activeView === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => onToggleView(item.id)}
+                className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                  isActive
+                    ? "bg-zinc-800 text-zinc-100 shadow-sm"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/50"
+                }`}
+              >
+                <item.icon
+                  className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                    isActive ? "text-zinc-100" : "text-zinc-500"
+                  }`}
+                />
+                <span className="truncate">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
       {/* History Session List */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
-        <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1.5 px-1">
+      <div className="flex-1 overflow-y-auto px-2 py-3 space-y-1">
+        <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1.5 px-2">
           {t.sidebar.history}
         </div>
         {sessions.map((s) => {
@@ -113,7 +93,7 @@ export function Sidebar({
             >
               <div className="text-xs font-medium truncate">{s.title}</div>
               <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500">
-                <span className="truncate max-w-[120px]">{s.target}</span>
+                <span className="truncate max-w-[110px]">{s.target}</span>
                 <span>{s.time}</span>
               </div>
             </div>
@@ -122,7 +102,7 @@ export function Sidebar({
       </div>
 
       {/* Footer: Environment & Settings */}
-      <div className="p-3 border-t border-zinc-900/80 bg-zinc-950/40 space-y-1">
+      <div className="p-2.5 border-t border-zinc-900/80 bg-zinc-950/40 space-y-1">
         <div className="flex items-center gap-1.5">
           <button
             onClick={onOpenTools}
