@@ -41,6 +41,9 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
+        continue-on-error: true
 
       - name: Install dependencies
         working-directory: site
@@ -49,7 +52,7 @@ jobs:
       - name: Build site
         working-directory: site
         env:
-          VITEPRESS_BASE: ${{ steps.pages.base_path || '/' }}
+          VITEPRESS_BASE: ${{ steps.pages.outputs.base_path || '/open-reverselab/' }}
         run: npm run build
 
       - name: Upload artifact
