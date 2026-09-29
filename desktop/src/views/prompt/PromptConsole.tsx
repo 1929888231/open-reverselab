@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Sparkles, Terminal, ArrowUp, Square, Paperclip } from "lucide-react";
+import { Sparkles, Terminal, ArrowUp, Square, Paperclip, UploadCloud } from "lucide-react";
 import { HarnessMode } from "../../core";
+import { logger } from "../../services";
 
 interface PromptConsoleProps {
   isRunning: boolean;
@@ -20,6 +21,7 @@ export function PromptConsole({
   const [prompt, setPrompt] = useState("");
   const [isEditingTarget, setIsEditingTarget] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (defaultTarget) setTarget(defaultTarget);
@@ -38,14 +40,54 @@ export function PromptConsole({
     }
   };
 
+  const handleFileChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const sha256 = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+      // Magic byte detection
+      const uint8 = new Uint8Array(buffer.slice(0, 4));
+      let fileType = "Unknown Binary";
+      if (uint8[0] === 0x4d && uint8[1] === 0x5a) {
+        fileType = "Windows PE Binary";
+      } else if (uint8[0] === 0x50 && uint8[1] === 0x4b) {
+        fileType = "APK / ZIP Package";
+      } else if (uint8[0] === 0x7f && uint8[1] === 0x45 && uint8[2] === 0x4c && uint8[3] === 0x46) {
+        fileType = "Linux ELF Binary";
+      }
+
+      setTarget(file.name);
+      logger.info(
+        "triage",
+        `已导入目标样本: ${file.name} (${(file.size / 1024).toFixed(1)} KB) · 识别格式: ${fileType}`,
+        { sha256, sizeBytes: file.size, fileType }
+      );
+    } catch (err: any) {
+      logger.error("triage", `文件读取异常: ${err.message}`);
+    }
+  };
+
   const quickChips = [
     { label: "UPX 脱壳与解密", prompt: "脱壳并还原密钥校验算法，生成解密注册机脚本" },
-    { label: "反调试与注入检测", prompt: "静态扫描并绕过反调试分支，提取 C2 与载荷" },
+    { label: "反调试与分支绕过", prompt: "静态扫描并绕过 IsDebuggerPresent 反调试分支，提取载荷" },
     { label: "Native JNI 密钥还原", prompt: "定位 libsecurity.so 导出函数与常量并输出复现代码" },
+    { label: "JWT 密钥爆破与利用", prompt: "检索 JWT None 签名漏洞及弱口令爆破并给出自动化利用脚本" },
   ];
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4 z-20">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChosen}
+        className="hidden"
+      />
+
       <div className="rounded-2xl bg-[#121215]/95 border border-zinc-800 shadow-2xl backdrop-blur-xl p-3 flex flex-col gap-2.5 transition-all">
         {/* Top Control Bar: Mode Capsule + Target Pill */}
         <div className="flex items-center justify-between gap-3 px-1">
@@ -88,16 +130,27 @@ export function PromptConsole({
                 className="px-2 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-xs font-mono text-zinc-200 focus:outline-none"
               />
             ) : (
-              <button
-                type="button"
-                onClick={() => setIsEditingTarget(true)}
-                title="Click to edit target path"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/80 text-[11px] font-mono text-zinc-300 transition cursor-pointer"
-              >
-                <Paperclip className="w-3 h-3 text-zinc-500" />
-                <span className="text-zinc-500">Target:</span>
-                <span className="truncate max-w-[200px]">{target}</span>
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingTarget(true)}
+                  title="点击手动编辑目标路径或URL"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/80 text-[11px] font-mono text-zinc-300 transition cursor-pointer"
+                >
+                  <Paperclip className="w-3 h-3 text-zinc-500" />
+                  <span className="text-zinc-500">Target:</span>
+                  <span className="truncate max-w-[200px]">{target}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="导入本地二进制样本 (.exe, .apk, .so, .bin)"
+                  className="p-1 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800/80 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
           </div>
         </div>

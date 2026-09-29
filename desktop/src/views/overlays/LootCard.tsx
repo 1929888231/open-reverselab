@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, Check, X } from "lucide-react";
+import { Copy, Check, X, Download } from "lucide-react";
 import { Deliverables } from "../../core";
 
 interface LootCardProps {
@@ -18,6 +18,18 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
     }
   };
 
+  const handleDownload = () => {
+    if (deliverables.script) {
+      const blob = new Blob([deliverables.script], { type: "text/x-python" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "solve_decrypt.py";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm z-50 p-6 animate-in fade-in duration-200">
       <div className="w-full max-w-xl bg-[#121215] border border-zinc-800 rounded-2xl p-6 shadow-2xl flex flex-col space-y-4">
@@ -32,7 +44,7 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+            className="p-1 rounded-md hover:bg-zinc-800 text-zinc-500 hover:text-zinc-200 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -68,24 +80,34 @@ export function LootCard({ deliverables, onClose }: LootCardProps) {
               <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
                 Reproduce Script
               </span>
-              <button
-                onClick={handleCopy}
-                className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono transition cursor-pointer"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-3 h-3 text-emerald-400" />
-                    <span>Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3 h-3" />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handleDownload}
+                  title="下载 Python 脚本至本地"
+                  className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono transition cursor-pointer"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>Save .py</span>
+                </button>
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-mono transition cursor-pointer"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-            <pre className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-[11px] font-mono text-zinc-300 overflow-x-auto max-h-48">
+            <pre className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-[11px] font-mono text-zinc-300 overflow-x-auto max-h-48 leading-relaxed">
               {deliverables.script}
             </pre>
           </div>

@@ -10,3 +10,5 @@ export * from "./prompt/Launcher";
 export * from "./overlays/DetailDrawer";
 export * from "./overlays/ToolMonitorDrawer";
 export * from "./overlays/LootCard";
+export * from "./settings/SettingsModal";
+export * from "./kb/KbNavigator";

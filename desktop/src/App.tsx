@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { HarnessProvider, useHarness } from "./state";
 import {
   TitleBar,
@@ -9,6 +10,8 @@ import {
   DetailDrawer,
   ToolMonitorDrawer,
   LootCard,
+  SettingsModal,
+  KbNavigator,
 } from "./views";
 import "./App.css";
 
@@ -34,6 +37,8 @@ function AppContent() {
     dismissLoot,
   } = useHarness();
 
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   return (
     <div className="w-screen h-screen bg-[#09090b] text-zinc-100 flex flex-col select-none overflow-hidden font-sans">
       {/* 1. Integrated borderless TitleBar with native dragging & controls */}
@@ -48,13 +53,14 @@ function AppContent() {
           onSelectSession={selectSession}
           onNewSession={newSession}
           onOpenTools={() => setToolMonitorOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
           activeView={viewMode}
           onToggleView={setViewMode}
         />
 
         {/* Center Main Stage + Big Prompt Console */}
         <div className="flex-1 flex flex-col relative overflow-hidden bg-[#09090b]">
-          {/* Swappable Views (Graph | Logs | Diagnostics) */}
+          {/* Swappable Views (Graph | Logs | Diagnostics | KB) */}
           <div className="flex-1 relative overflow-hidden">
             {viewMode === "canvas" && (
               <CanvasGraph
@@ -72,6 +78,14 @@ function AppContent() {
             {viewMode === "diagnostics" && (
               <DiagnosticsPanel
                 currentTarget={currentSession?.target}
+              />
+            )}
+            {viewMode === "kb" && (
+              <KbNavigator
+                onSelectTechnique={(ref) => {
+                  executeHarness(currentSession?.target || "target.bin", `深入参考 ${ref} 并执行针对性逆向`, "wish");
+                  setViewMode("canvas");
+                }}
               />
             )}
           </div>
@@ -101,6 +115,11 @@ function AppContent() {
             onClose={dismissLoot}
           />
         )}
+
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+        />
       </div>
     </div>
   );
